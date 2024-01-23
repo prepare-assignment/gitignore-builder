@@ -1,0 +1,27 @@
+id: "gitignore-builder"
+name: "gitignore builder"
+description: "Build .gitignore file from templates"
+inputs:
+  templates:
+    description: "GitHub templates to use"
+    required: true
+    type: array
+    items: string
+  rules:
+    description: "Extra rules to add"
+    required: false
+    type: array
+    items: string
+  caching:
+    description: "For how long (in minutes) templates should be cached (to disable cache use negative value)"
+    required: false
+    type: integer
+    default: 60 * 24 * 7
+  output-directory:
+    description: "Output directory where the new .gitignore should be placed"
+    required: false
+    type: string
+    default: "."
+runs:
+  using: "python"
+  main: "gitignore_builder/main.py"
