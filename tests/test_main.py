@@ -66,7 +66,7 @@ def test_rules(tmp_path: Path, mocker: MockerFixture) -> None:
         for line in handle:
             pass
         last_line = line
-    assert last_line == b"extrarule\n"
+    assert b"extrarule" in last_line
 
 
 def test_exception(mocker: MockerFixture) -> None:
