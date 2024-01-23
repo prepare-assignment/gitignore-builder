@@ -1,0 +1,22 @@
+name: Test
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: prepare-assignment/actions-ci/.github/workflows/test.yml@main
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    with:
+      mypy-argument: "gitignore_builder"
