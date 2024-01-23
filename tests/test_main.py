@@ -9,7 +9,7 @@ from typing import List, Optional
 import pytest
 from pytest_mock import MockerFixture
 
-from gitignore_builder.main import main
+from gitignore_builder.main import main, get_cache_path
 
 
 def set_environment(out: Path, templates: List[str], rules: Optional[List[str]] = None, caching: int = 10080) -> None:
@@ -74,3 +74,18 @@ def test_exception(mocker: MockerFixture) -> None:
     spy = mocker.patch("gitignore_builder.main.set_failed")
     main()
     spy.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "OS", ["linux", "darwin", "win32"]
+)
+def test_cache_path(OS: str, mocker: MockerFixture) -> None:
+    mocker.patch("sys.platform", OS)
+    path = get_cache_path()
+    assert path is not None
+
+
+def test_cache_unsupported_os(mocker: MockerFixture) -> None:
+    mocker.patch("sys.platform", "solaris")
+    with pytest.raises(Exception):
+        path = get_cache_path()
