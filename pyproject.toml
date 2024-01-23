@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "gitignore-builder"
+version = "0.1.0"
+description = "Build gitignore file from templates"
+authors = ["Martijn Bonajo <m.bonajo@fontys.nl>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "gitignore_builder"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
