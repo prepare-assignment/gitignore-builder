@@ -8,7 +8,8 @@ readme = "README.md"
 packages = [{include = "gitignore_builder"}]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
+prepare-toolbox = "^0.4.0"
 
 
 [build-system]
