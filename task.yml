@@ -13,10 +13,10 @@ inputs:
     type: array
     items: string
   caching:
-    description: "For how long (in minutes) templates should be cached (to disable cache use negative value)"
+    description: "For how long (in minutes) templates should be cached (to disable, use a value less or equal to zero)"
     required: false
     type: integer
-    default: 60 * 24 * 7
+    default: 10080 # One week
   output-directory:
     description: "Output directory where the new .gitignore should be placed"
     required: false
