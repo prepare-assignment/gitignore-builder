@@ -9,7 +9,7 @@ from typing import List, Optional
 import pytest
 from pytest_mock import MockerFixture
 
-from gitignore_builder.main import main, get_cache_path
+from prepare_gitignore_builder.main import main, get_cache_path
 
 
 def set_environment(out: Path, templates: List[str], rules: Optional[List[str]] = None, caching: int = 10080) -> None:
@@ -21,7 +21,7 @@ def set_environment(out: Path, templates: List[str], rules: Optional[List[str]] 
 
 
 def set_cache_path(path: Path, mocker: MockerFixture) -> None:
-    mocker.patch("gitignore_builder.main.get_cache_path", return_value=path)
+    mocker.patch("prepare_gitignore_builder.main.get_cache_path", return_value=path)
 
 
 def test_not_present(tmp_path: Path, mocker: MockerFixture) -> None:
@@ -70,8 +70,8 @@ def test_rules(tmp_path: Path, mocker: MockerFixture) -> None:
 
 
 def test_exception(mocker: MockerFixture) -> None:
-    mocker.patch("gitignore_builder.main.get_input", side_effect=Exception("Test Exception"))
-    spy = mocker.patch("gitignore_builder.main.set_failed")
+    mocker.patch("prepare_gitignore_builder.main.get_input", side_effect=Exception("Test Exception"))
+    spy = mocker.patch("prepare_gitignore_builder.main.set_failed")
     main()
     spy.assert_called_once()
 

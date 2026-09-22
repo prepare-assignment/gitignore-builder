@@ -1,5 +1,5 @@
 [project]
-name = "gitignore-builder"
+name = "prepare-gitignore-builder"
 version = "0.1.0"
 description = "Build gitignore file from templates"
 authors = [{ name = "Martijn Bonajo", email = "m.bonajo@fontys.nl" }]

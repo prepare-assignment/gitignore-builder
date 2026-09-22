@@ -24,4 +24,4 @@ inputs:
     default: "."
 runs:
   using: "python"
-  main: "gitignore_builder/main.py"
+  main: "prepare_gitignore_builder/main.py"
