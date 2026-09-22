@@ -5,17 +5,19 @@ description = "Build gitignore file from templates"
 authors = [{ name = "Martijn Bonajo", email = "m.bonajo@fontys.nl" }]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
-    "prepare-toolbox>=0.4.0",
+    "prepare-toolbox>=1.0.1",
 ]
 
 [dependency-groups]
 test = [
-    "pytest>=7.4.4",
+    "pytest>=9.0.3",
     "pytest-mock>=3.12.0",
-    "pytest-cov>=4.1.0",
-    "mypy>=1.8.0",
+    "pytest-cov>=7.1.0",
+    "mypy>=2.3.1",
+    "packaging>=26.3",
+    "pyyaml>=6.0",
 ]
 
 [build-system]
