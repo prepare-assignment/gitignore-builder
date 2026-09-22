@@ -7,7 +7,7 @@ from typing import Set
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-PACKAGE = Path(__file__).parent.parent / "gitignore_builder"
+PACKAGE = Path(__file__).parent.parent / "prepare_gitignore_builder"
 
 
 def _imported_modules() -> Set[str]:
@@ -20,12 +20,12 @@ def _imported_modules() -> Set[str]:
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module is not None:
                 modules.add(node.module.split(".")[0])
     return {module for module in modules
-            if module not in sys.stdlib_module_names and module != "gitignore_builder"}
+            if module not in sys.stdlib_module_names and module != "prepare_gitignore_builder"}
 
 
 def _declared_dependencies() -> Set[str]:
     declared: Set[str] = set()
-    for line in requires("gitignore-builder") or []:
+    for line in requires("prepare-gitignore-builder") or []:
         requirement = Requirement(line)
         # Skip optional dependencies (extras)
         if requirement.marker is None or requirement.marker.evaluate({"extra": ""}):

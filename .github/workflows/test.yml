@@ -18,4 +18,4 @@ jobs:
       contents: read
       pull-requests: write
     with:
-      mypy-argument: "gitignore_builder"
+      mypy-argument: "prepare_gitignore_builder"
