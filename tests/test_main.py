@@ -193,3 +193,32 @@ def test_cache_path_unsupported_platform(mocker: MockerFixture) -> None:
     mocker.patch("sys.platform", "solaris")
     with pytest.raises(AssertionError):
         get_cache_path()
+
+
+@pytest.mark.parametrize("template", ["../../evil", "../escaped", "Global/../../evil", "/etc/hosts",
+                                      str(Path.home() / "evil")])
+def test_invalid_template(template: str, project: Path, cache: Path, urls: List[str],
+                          monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
+    """
+    The name ends up in the cache path: '../../evil' wrote a file outside the cache directory, and a fresh
+    file there was read into the .gitignore.
+    """
+    set_inputs(monkeypatch, templates=[template])
+    failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
+    main()
+    assert str(failed.call_args.args[0]) == (f"Invalid template '{template}', use a name from "
+                                             f"https://github.com/github/gitignore like 'Java' or "
+                                             f"'Global/JetBrains'")
+    assert urls == []
+    assert not (project / ".gitignore").exists()
+
+
+def test_escaping_template_writes_nothing_outside_the_cache(project: Path, cache: Path,
+                                                            monkeypatch: pytest.MonkeyPatch,
+                                                            mocker: MockerFixture) -> None:
+    """With a server that serves anything, '../../escaped' used to write outside the cache directory"""
+    mocker.patch("urllib.request.urlopen", return_value=BytesIO(b"escaped\n"))
+    set_inputs(monkeypatch, templates=["../../escaped"])
+    mocker.patch("prepare_gitignore_builder.main.set_failed")
+    main()
+    assert list(cache.parent.parent.rglob("escaped.gitignore")) == []

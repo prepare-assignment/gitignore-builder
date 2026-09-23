@@ -13,6 +13,18 @@ TIMEOUT: Final[int] = 30
 GITHUB_GITIGNORE: Final[str] = "https://github.com/github/gitignore"
 
 
+def __cache_file(cache_path: Path, template: str) -> str:
+    """
+    The file a template is cached in. A template name ends up in this path, so a name like '../../evil' or an
+    absolute path would read and write files outside the cache directory.
+    """
+    path = os.path.normpath(os.path.join(cache_path, f"{template}.gitignore"))
+    if not Path(path).is_relative_to(os.path.normpath(cache_path)):
+        raise ValueError(f"Invalid template '{template}', use a name from {GITHUB_GITIGNORE} "
+                         f"like 'Java' or 'Global/JetBrains'")
+    return path
+
+
 def __download(url: str, template: str) -> str:
     """
     Download a template. urllib's own errors don't mention the template, and a 404 (a typo in the name) looks
@@ -44,7 +56,7 @@ def main() -> None:
         ignore_path = os.path.normpath(os.path.join(os.getcwd(), output_directory, ".gitignore"))
         ignore = ""
         for template in templates:
-            template_path = f"{os.path.join(cache_path, template)}.gitignore"
+            template_path = __cache_file(cache_path, template)
             content = ""
             if os.path.isfile(template_path) and int((time.time() - os.path.getmtime(template_path)) / 60) < caching:
                 info(f"Template {template} is already present and fresh enough")
