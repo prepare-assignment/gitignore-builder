@@ -69,12 +69,20 @@ def project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return path
 
 
+def written(set_output: Any) -> str:
+    """The file output, as is: paths use '/' on every platform (they are used in other steps)"""
+    set_output.assert_called_once()
+    return str(set_output.call_args.args[1])
+
+
 def test_download(project: Path, cache: Path, urls: List[str], monkeypatch: pytest.MonkeyPatch,
                   mocker: MockerFixture) -> None:
     set_inputs(monkeypatch, templates=["Java"])
+    set_output = mocker.patch("prepare_gitignore_builder.main.set_output")
     failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
     main()
     failed.assert_not_called()
+    assert written(set_output) == ".gitignore"
     assert urls == [f"{BASE_URL}/Java.gitignore"]
     assert (cache / "Java.gitignore").read_text() == TEMPLATES["Java"]
     assert (project / ".gitignore").read_text() == "### Java\n*.class\n*.jar\n\n"
@@ -128,10 +136,13 @@ def test_rules(project: Path, cache: Path, urls: List[str], monkeypatch: pytest.
                                                     "### Custom rules\nout/\n*.log\n")
 
 
-def test_output_directory(project: Path, cache: Path, urls: List[str], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_output_directory(project: Path, cache: Path, urls: List[str], monkeypatch: pytest.MonkeyPatch,
+                          mocker: MockerFixture) -> None:
     (project / "assignment").mkdir()
     set_inputs(monkeypatch, templates=["Java"], output_directory="assignment")
+    set_output = mocker.patch("prepare_gitignore_builder.main.set_output")
     main()
+    assert written(set_output) == "assignment/.gitignore"
     assert (project / "assignment" / ".gitignore").is_file()
     assert not (project / ".gitignore").exists()
 
@@ -163,10 +174,13 @@ def test_output_directory_outside_allowed(project: Path, cache: Path, urls: List
                                           monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
     set_inputs(monkeypatch, templates=["Java"], output_directory="../outside",
                allow_outside_working_directory=True)
+    set_output = mocker.patch("prepare_gitignore_builder.main.set_output")
     failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
     main()
     failed.assert_not_called()
     assert (project.parent / "outside" / ".gitignore").is_file()
+    # A file outside the working directory has no relative form
+    assert written(set_output) == (project.parent / "outside" / ".gitignore").as_posix()
 
 
 def test_existing_gitignore_is_overwritten(project: Path, cache: Path, urls: List[str],
