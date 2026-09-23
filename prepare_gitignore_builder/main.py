@@ -4,8 +4,32 @@ import time
 import urllib.request
 from pathlib import Path
 from typing import List, Optional, Final
+from urllib.error import HTTPError, URLError
 
 from prepare_toolbox.core import get_input, set_failed, info
+
+# Without a timeout an unreachable github.com makes the task hang until the whole run is killed
+TIMEOUT: Final[int] = 30
+GITHUB_GITIGNORE: Final[str] = "https://github.com/github/gitignore"
+
+
+def __download(url: str, template: str) -> str:
+    """
+    Download a template. urllib's own errors don't mention the template, and a 404 (a typo in the name) looks
+    like a broken task instead of a wrong input.
+    """
+    try:
+        with urllib.request.urlopen(url, timeout=TIMEOUT) as response:
+            return str(response.read().decode("utf-8"))
+    except HTTPError as error:
+        if error.code == 404:
+            raise ValueError(f"Template '{template}' doesn't exist, see {GITHUB_GITIGNORE} for the "
+                             f"available templates") from error
+        raise ValueError(f"Could not download template '{template}' from {url}: "
+                         f"{error.code} {error.reason}") from error
+    except (URLError, TimeoutError) as error:
+        reason = getattr(error, "reason", error)
+        raise ValueError(f"Could not download template '{template}' from {url}: {reason}") from error
 
 
 def main() -> None:
@@ -29,13 +53,12 @@ def main() -> None:
             else:
                 info(f"Template {template} not present or too old")
                 url = f"{base_url}/{template}.gitignore"
-                with urllib.request.urlopen(url) as handle:
-                    content = handle.read().decode("utf-8")
-                    basedir = os.path.dirname(template_path)
-                    if not os.path.isdir(basedir):
-                        Path(basedir).mkdir(parents=True, exist_ok=True)
-                    with open(template_path, 'w') as file:
-                        file.write(content)
+                content = __download(url, template)
+                basedir = os.path.dirname(template_path)
+                if not os.path.isdir(basedir):
+                    Path(basedir).mkdir(parents=True, exist_ok=True)
+                with open(template_path, 'w') as file:
+                    file.write(content)
             ignore += f"### {template}\n"
             ignore += content
             ignore += "\n"
