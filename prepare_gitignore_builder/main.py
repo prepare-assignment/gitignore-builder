@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional, Final
 from urllib.error import HTTPError, URLError
 
-from prepare_toolbox.core import get_input, set_failed, info
+from prepare_toolbox.core import get_input, set_failed, set_output, info
 
 # Without a timeout an unreachable github.com makes the task hang until the whole run is killed
 TIMEOUT: Final[int] = 30
@@ -88,6 +88,9 @@ def main() -> None:
         output_path.mkdir(parents=True, exist_ok=True)
         with open(ignore_path, 'w') as handle:
             handle.write(ignore)
+        # The path as other steps can use it, always with '/' (also on Windows)
+        relative = ignore_path.relative_to(os.getcwd()) if ignore_path.is_relative_to(os.getcwd()) else ignore_path
+        set_output("file", relative.as_posix())
 
     except Exception as e:
         set_failed(e)

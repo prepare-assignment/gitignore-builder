@@ -51,6 +51,35 @@ allow-outside-working-directory:
 
 The output directory is created if it doesn't exist. An existing `.gitignore` in it is overwritten. A directory outside the working directory (e.g. `../out`) fails, unless `allow-outside-working-directory` is set.
 
+## Outputs
+
+The following outputs are available:
+
+```yaml
+file:
+  description: The .gitignore file that has been written
+  type: string
+```
+
+- `file`: the written `.gitignore`, relative to the working directory and always with `/` (also on Windows), so other steps can use it:
+
+```yml
+- name: Build gitignore
+  id: gitignore
+  uses: gitignore-builder
+  with:
+    templates:
+      - Java
+    output-directory: out
+- name: Compress
+  uses: compress
+  with:
+    inputs:
+      - out/**
+      - ${{ steps.gitignore.outputs.file }}
+    output: assignment.zip
+```
+
 ## Releases
 
 Releases are automated with [semantic-release](https://semantic-release.gitbook.io/). Pull requests are squash merged, so the PR title becomes the commit on `main` and must follow [Conventional Commits](https://www.conventionalcommits.org/) (checked on every PR):

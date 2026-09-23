@@ -27,6 +27,10 @@ inputs:
     required: false
     type: boolean
     default: false
+outputs:
+  file:
+    description: The .gitignore file that has been written
+    type: string
 runs:
   using: "python"
   main: "prepare_gitignore_builder/main.py"
