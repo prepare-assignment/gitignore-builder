@@ -4,7 +4,7 @@ import time
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 import pytest
 import yaml
@@ -145,11 +145,34 @@ def test_existing_gitignore_is_overwritten(project: Path, cache: Path, urls: Lis
 
 def test_unknown_template(project: Path, cache: Path, urls: List[str], monkeypatch: pytest.MonkeyPatch,
                           mocker: MockerFixture) -> None:
+    """A typo in a template name gave urllib's 'HTTP Error 404: Not Found', without naming the template"""
     set_inputs(monkeypatch, templates=["Jave"])
     failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
     main()
-    failed.assert_called_once()
+    assert str(failed.call_args.args[0]) == ("Template 'Jave' doesn't exist, see https://github.com/github/gitignore "
+                                             "for the available templates")
     assert not (project / ".gitignore").exists()
+
+
+def test_server_error(project: Path, cache: Path, monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
+    url = f"{BASE_URL}/Java.gitignore"
+    mocker.patch("urllib.request.urlopen", side_effect=HTTPError(url, 503, "Service Unavailable", {}, None))
+    set_inputs(monkeypatch, templates=["Java"])
+    failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
+    main()
+    assert str(failed.call_args.args[0]) == (f"Could not download template 'Java' from {url}: "
+                                             f"503 Service Unavailable")
+
+
+def test_unreachable(project: Path, cache: Path, monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
+    """A request without a timeout hangs until the whole run is killed"""
+    urlopen = mocker.patch("urllib.request.urlopen", side_effect=URLError(TimeoutError("timed out")))
+    set_inputs(monkeypatch, templates=["Java"])
+    failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
+    main()
+    assert urlopen.call_args.kwargs["timeout"] == 30
+    assert str(failed.call_args.args[0]) == (f"Could not download template 'Java' from {BASE_URL}/Java.gitignore: "
+                                             f"timed out")
 
 
 def test_exception(project: Path, monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
