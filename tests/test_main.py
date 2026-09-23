@@ -10,6 +10,7 @@ import pytest
 import yaml
 from pytest_mock import MockerFixture
 
+import prepare_gitignore_builder.main as builder_main
 from prepare_gitignore_builder.main import main, get_cache_path
 
 TASK = Path(__file__).parent.parent / "task.yml"
@@ -133,6 +134,39 @@ def test_output_directory(project: Path, cache: Path, urls: List[str], monkeypat
     main()
     assert (project / "assignment" / ".gitignore").is_file()
     assert not (project / ".gitignore").exists()
+
+
+def test_output_directory_is_created(project: Path, cache: Path, urls: List[str], monkeypatch: pytest.MonkeyPatch,
+                                     mocker: MockerFixture) -> None:
+    """A missing output directory used to fail with a raw FileNotFoundError"""
+    set_inputs(monkeypatch, templates=["Java"], output_directory="out/assignment")
+    failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
+    main()
+    failed.assert_not_called()
+    assert (project / "out" / "assignment" / ".gitignore").read_text() == "### Java\n*.class\n*.jar\n\n"
+
+
+@pytest.mark.parametrize("output_directory", ["..", "../outside", "out/../../outside"])
+def test_output_directory_outside_working_directory(output_directory: str, project: Path, cache: Path,
+                                                    urls: List[str], monkeypatch: pytest.MonkeyPatch,
+                                                    mocker: MockerFixture) -> None:
+    set_inputs(monkeypatch, templates=["Java"], output_directory=output_directory)
+    failed = mocker.spy(builder_main, "set_failed")
+    with pytest.raises(SystemExit):
+        main()
+    assert failed.call_args.args[0] == (f"The output directory '{output_directory}' is outside the working "
+                                        f"directory, set 'allow-outside-working-directory' to allow this")
+    assert not (project.parent / ".gitignore").exists()
+
+
+def test_output_directory_outside_allowed(project: Path, cache: Path, urls: List[str],
+                                          monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
+    set_inputs(monkeypatch, templates=["Java"], output_directory="../outside",
+               allow_outside_working_directory=True)
+    failed = mocker.patch("prepare_gitignore_builder.main.set_failed")
+    main()
+    failed.assert_not_called()
+    assert (project.parent / "outside" / ".gitignore").is_file()
 
 
 def test_existing_gitignore_is_overwritten(project: Path, cache: Path, urls: List[str],

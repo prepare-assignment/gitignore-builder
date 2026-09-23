@@ -50,10 +50,15 @@ def main() -> None:
         rules: Optional[List[str]] = get_input("rules")
         caching: int = get_input("caching")
         output_directory: str = get_input("output-directory")
+        allow_outside: bool = get_input("allow-outside-working-directory")
 
         cache_path: Final[Path] = get_cache_path()
         base_url = "https://raw.githubusercontent.com/github/gitignore/main"
-        ignore_path = os.path.normpath(os.path.join(os.getcwd(), output_directory, ".gitignore"))
+        output_path = Path(os.path.normpath(os.path.join(os.getcwd(), output_directory)))
+        if not allow_outside and not output_path.is_relative_to(os.getcwd()):
+            set_failed(f"The output directory '{Path(output_directory).as_posix()}' is outside the working "
+                       f"directory, set 'allow-outside-working-directory' to allow this")
+        ignore_path = output_path / ".gitignore"
         ignore = ""
         for template in templates:
             template_path = __cache_file(cache_path, template)
@@ -79,6 +84,8 @@ def main() -> None:
             for rule in rules:
                 ignore += f"{rule}\n"
 
+        # The task's whole job is producing this file, so create the directory it goes in
+        output_path.mkdir(parents=True, exist_ok=True)
         with open(ignore_path, 'w') as handle:
             handle.write(ignore)
 
