@@ -38,11 +38,18 @@ caching:
     type: integer
     default: 10080 # One week
 output-directory:
-    description: "Output directory where the new .gitignore should be placed"
+    description: "Output directory where the new .gitignore should be placed, it is created if needed"
     required: false
     type: string
     default: "."
+allow-outside-working-directory:
+    description: "The output directory can be outside the working directory"
+    required: false
+    type: boolean
+    default: false
 ```
+
+The output directory is created if it doesn't exist. An existing `.gitignore` in it is overwritten. A directory outside the working directory (e.g. `../out`) fails, unless `allow-outside-working-directory` is set.
 
 ## Releases
 
